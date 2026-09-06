@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BugHunter - Learn by Fixing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-6">
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-emerald-400">BugHunter & Compiler</h1>
+            <p class="text-slate-400">Find the errors, fix your code, and run it live.</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Code Editor Section -->
+            <div class="bg-slate-800 p-4 rounded-xl shadow-lg flex flex-col">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="font-semibold text-sm text-slate-300">Source Code</label>
+                    <select id="language" class="bg-slate-700 text-sm rounded px-2 py-1 outline-none">
+                        <option value="c">C Language</option>
+                        <option value="python">Python</option>
+                    </select>
+                </div>
+                <textarea id="codeinput" rows="12" class="w-full bg-slate-950 font-mono text-emerald-300 p-3 rounded border border-slate-700 focus:outline-none focus:border-emerald-500" placeholder="#include <stdio.h>&#10;int main() {&#10;    printf('Hello World')&#10;    return 0;&#10;}"></textarea>
+                <button onclick="submitCode()" class="mt-4 bg-emerald-600 hover:bg-emerald-500 font-semibold py-2 rounded transition">
+                    Run & Analyze Code
+                </button>
+            </div>
+
+            <!-- Output / Error Terminal Section -->
+            <div class="bg-slate-800 p-4 rounded-xl shadow-lg flex flex-col">
+                <label class="font-semibold text-sm text-slate-300 mb-2">Terminal / Analysis</label>
+                <div id="terminal" class="w-full flex-grow bg-slate-950 font-mono text-sm p-3 rounded border border-slate-700 overflow-y-auto text-slate-300">
+                    <span class="text-slate-500">// Results and compiler feedback will appear here...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function submitCode() {
+            const code = document.getElementById('codeinput').value;
+            const language = document.getElementById('language').value;
+            const terminal = document.getElementById('terminal');
+
+            terminal.innerHTML = `<span class="text-yellow-400">Analyzing and compiling...</span>`;
+
+            try {
+                const response = await fetch('/api/compile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, language })
+                });
+                const result = await response.json();
+
+                let html = '';
+                if(result.errors.length > 0) {
+                    html += `<span class="text-red-400 font-bold">Errors Found:</span><br>`;
+                    result.errors.forEach(err => {
+                        html += `<span class="text-red-300">- ${err}</span><br>`;
+                    });
+                } else {
+                    html += `<span class="text-emerald-400 font-bold">${result.output}</span><br>`;
+                }
+                terminal.innerHTML = html;
+            } catch (err) {
+                terminal.innerHTML = `<span class="text-red-500">Error connecting to serverless execution function.</span>`;
+            }
+        }
+    </script>
+</body>
+</html>
+
